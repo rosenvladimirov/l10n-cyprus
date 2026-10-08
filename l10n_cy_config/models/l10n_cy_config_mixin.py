@@ -42,6 +42,30 @@ class L10nCyConfigMixin(models.AbstractModel):
             result["arch"] = etree.tostring(doc)
         return result
 
+    @api.model
+    def fields_get(self, allfields=None, attributes=None):
+        """Справките на не-кипърска фирма не предлагат маркираните полета.
+
+        „Групиране по → собствено“, полето в „Добави филтър“ и мерките на
+        pivot/graph идват от fields_get, не от изгледа — get_view не ги
+        стига. Полетата остават в отговора (формите и списъците ги искат),
+        само им се свалят флаговете, по които клиентът ги предлага.
+        """
+        result = super().fields_get(allfields=allfields, attributes=attributes)
+        if not self.env.company._l10n_cy_is_cypriot():
+            self._l10n_cy_unoffer_marked(result)
+        return result
+
+    def _l10n_cy_unoffer_marked(self, descriptions):
+        for name, desc in descriptions.items():
+            if not self._l10n_cy_is_marked(name):
+                continue
+            for flag in ("groupable", "searchable"):
+                if flag in desc:
+                    desc[flag] = False
+            if "aggregator" in desc:
+                desc["aggregator"] = None
+
     def _l10n_cy_is_marked(self, value):
         return bool(value) and value.startswith(self._l10n_cy_markers)
 

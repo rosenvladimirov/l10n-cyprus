@@ -47,3 +47,19 @@ class TestL10nCyHideMarked(TransactionCase):
             return etree.fromstring(Partner.get_view(view.id, "form")["arch"])
         self.assertIsNone(arch_for(cy).find(".//group[@name='l10n_cy_test']").get("invisible"))
         self.assertEqual(arch_for(bg).find(".//group[@name='l10n_cy_test']").get("invisible"), "True")
+
+    def test_fields_get_unoffers_marked_outside_country(self):
+        # справките (групиране, филтър, мерки) четат fields_get, не изгледа;
+        # 'ref' е обявено за маркирано само за теста — по res.partner няма свое поле
+        Partner = type(self.env["res.partner"])
+        self.patch(Partner, "_l10n_cy_markers", ("ref",))
+        home = self.env["res.company"].create({"name": "home", "country_id": self.env.ref("base.cy").id})
+        bg = self.env["res.company"].create({"name": "BG", "country_id": self.env.ref("base.bg").id})
+        def desc_for(company):
+            P = self.env["res.partner"].with_company(company).with_context(allowed_company_ids=[company.id])
+            return P.fields_get(["ref", "name"], ["groupable", "searchable"])
+        self.assertTrue(desc_for(home)["ref"]["searchable"])
+        foreign = desc_for(bg)
+        self.assertIs(foreign["ref"]["searchable"], False)
+        self.assertIs(foreign["ref"]["groupable"], False)
+        self.assertTrue(foreign["name"]["searchable"])

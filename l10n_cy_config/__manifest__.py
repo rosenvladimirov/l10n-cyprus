@@ -3,7 +3,7 @@
 {
     "name": "Cyprus - Configuration",
     "summary": "Hides Cypriot-only fields (l10n_cy*) in companies that are not Cypriot",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Accounting/Localizations",
     "author": "Rosen Vladimirov",
     "maintainers": ["rosenvladimirov"],
